@@ -37,13 +37,12 @@ then
     sudo sh get-docker.sh
     rm get-docker.sh
 
-    # Explicitly start the Docker daemon if it's not running.
-    if ! sudo systemctl is-active --quiet docker; then
-        echo "Starting Docker service..."
-        sudo systemctl start docker
-        # Wait a moment for the daemon to initialize.
-        sleep 5
-    fi
+    # Explicitly start the Docker daemon using the 'service' command
+    # for compatibility with non-systemd environments.
+    echo "Starting Docker service..."
+    sudo service docker start
+    # Wait a moment for the daemon to initialize.
+    sleep 5
 
     echo "Docker installed successfully. Note: You may need to log out and back in to run 'docker' commands without 'sudo'."
 fi
