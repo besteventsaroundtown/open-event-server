@@ -1,29 +1,19 @@
 #!/bin/bash
 
-
+# Exit immediately if a command exits with a non-zero status.
+set -e
 
 # Install pyenv if not already installed
 if ! command -v pyenv &> /dev/null
 then
     echo "pyenv could not be found, installing..."
     curl https://pyenv.run | $SHELL
-    # Add pyenv configuration to shell startup file for future sessions
-    if ! grep -q 'pyenv init' "$HOME/.bashrc" 2>/dev/null; then
-        echo "Adding pyenv configuration to ~/.bashrc..."
-        echo '' >> "$HOME/.bashrc"
-        echo '# pyenv configuration' >> "$HOME/.bashrc"
-        echo 'export PYENV_ROOT="$HOME/.pyenv"' >> "$HOME/.bashrc"
-        echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> "$HOME/.bashrc"
-        echo 'eval "$(pyenv init --path)"' >> "$HOME/.bashrc"
-        echo 'eval "$(pyenv init -)"' >> "$HOME/.bashrc"
-    fi
+    export PYENV_ROOT="$HOME/.pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init --path)"
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
 fi
-
-# Configure pyenv for the CURRENT session
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
 
 # Install Python 3.8.17
 if ! pyenv versions --bare | grep -q "3.8.17"; then
@@ -36,20 +26,8 @@ if ! command -v poetry &> /dev/null
 then
     echo "Poetry could not be found, installing..."
     pip install poetry
-    # Add poetry to PATH in shell startup file for future sessions
-    POETRY_PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
-    if ! grep -q ".local/bin" "$HOME/.bashrc" 2>/dev/null; then
-        echo "Adding Poetry to PATH in ~/.bashrc..."
-        echo '' >> "$HOME/.bashrc"
-        echo "# Add Poetry to PATH" >> "$HOME/.bashrc"
-        echo "$POETRY_PATH_LINE" >> "$HOME/.bashrc"
-    fi
+    export PATH="~/.local/bin:$PATH"
 fi
-
-# Configure Poetry for the CURRENT session
-export PATH="$HOME/.local/bin:$PATH"
-
-
 
 # Install project dependencies
 poetry install --with dev --no-root
@@ -70,6 +48,7 @@ echo "Starting PostgreSQL container..."
 sudo docker run -d -e POSTGRES_USER=test -e POSTGRES_HOST_AUTH_METHOD=trust \
        --mount type=tmpfs,destination=/var/lib/postgresql/data \
        --rm -p 5433:5432 --name opev-test-db postgis/postgis:12-3.0-alpine
+export TEST_DATABASE_URL=postgresql://test@localhost:5433/test
 
 # Stop and remove existing Redis container if it exists
 if [ "$(sudo docker ps -q -f name=opev-test-redis)" ]; then
@@ -87,29 +66,15 @@ echo "Starting Redis container..."
 sudo docker run -d -p 6379:6379 --name opev-test-redis redis
 # fi # This was a stray fi, removing it.
 
-# Copy .env.example to .env if it doesn't exist
-if [ ! -f .env ]; then
-    echo "Creating .env file from .env.example..."
-    cp .env.example .env
-fi
-
 # Set environment variables for tests
-echo "Adding test configuration to .env file..."
-TEST_DATABASE_URL="postgresql://test@localhost:5433/test"
-cat <<EOT >> .env
-
-# Settings for local testing environment
-APP_CONFIG=config.TestingConfig
-DATABASE_URL=${TEST_DATABASE_URL}
-TEST_DATABASE_URL=${TEST_DATABASE_URL}
-JWT_SECRET_KEY="test_secret_key"
-SECRET_KEY="test_secret_key"
-REDIS_URL="redis://127.0.0.1:6379/0"
-EOT
-
-echo "Environment setup complete. You can now run tests in this terminal or a new one"
-
+export APP_CONFIG=config.TestingConfig
+export DATABASE_URL=$TEST_DATABASE_URL
+export JWT_SECRET_KEY="test_secret_key" # Please replace with a secure key in a real environment
+export SECRET_KEY="test_secret_key" # Please replace with a secure key in a real environment
+export REDIS_URL="redis://127.0.0.1:6379/0"
 
 # Run unit tests
  echo "Running unit tests..."
- poetry run pytest tests/ -x
+ poetry run pytest tests/
+
+echo "Setup and tests completed successfully!"
