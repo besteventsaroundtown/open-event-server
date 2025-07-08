@@ -8,10 +8,10 @@ then
     sudo sh get-docker.sh
     rm get-docker.sh
 
-    # Explicitly start the Docker daemon using the 'service' command
-    # for compatibility with non-systemd environments.
-    echo "Starting Docker service..."
-    sudo service docker start
+    # Start the Docker daemon directly to bypass init script issues (e.g., ulimit).
+    # The daemon is started in the background, and output is redirected.
+    echo "Starting Docker daemon..."
+    sudo dockerd > /dev/null 2>&1 &
     # Wait a moment for the daemon to initialize.
     sleep 5
 
