@@ -36,6 +36,15 @@ then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
     rm get-docker.sh
+
+    # Explicitly start the Docker daemon if it's not running.
+    if ! sudo systemctl is-active --quiet docker; then
+        echo "Starting Docker service..."
+        sudo systemctl start docker
+        # Wait a moment for the daemon to initialize.
+        sleep 5
+    fi
+
     echo "Docker installed successfully. Note: You may need to log out and back in to run 'docker' commands without 'sudo'."
 fi
 
