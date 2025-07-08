@@ -23,23 +23,24 @@ if ! command -v pyenv &> /dev/null
 then
     echo "pyenv could not be found, installing..."
     curl https://pyenv.run | $SHELL
-
-    # Add pyenv configuration to shell startup file if not present
+    # Add pyenv configuration to shell startup file for future sessions
     if ! grep -q 'pyenv init' "$HOME/.bashrc" 2>/dev/null; then
-        echo "Adding pyenv configuration to ~/.bashrc for future sessions..."
+        echo "Adding pyenv configuration to ~/.bashrc..."
         echo '' >> "$HOME/.bashrc"
         echo '# pyenv configuration' >> "$HOME/.bashrc"
         echo 'export PYENV_ROOT="$HOME/.pyenv"' >> "$HOME/.bashrc"
         echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> "$HOME/.bashrc"
+        echo 'eval "$(pyenv init --path)"' >> "$HOME/.bashrc"
         echo 'eval "$(pyenv init -)"' >> "$HOME/.bashrc"
     fi
-
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init --path)"
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
 fi
+
+# Configure pyenv for the CURRENT session
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
 
 # Install Python 3.8.17
 if ! pyenv versions --bare | grep -q "3.8.17"; then
@@ -52,18 +53,19 @@ if ! command -v poetry &> /dev/null
 then
     echo "Poetry could not be found, installing..."
     pip install poetry
-
-    # Add poetry to PATH in shell startup file if not present
+    # Add poetry to PATH in shell startup file for future sessions
     POETRY_PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
     if ! grep -q ".local/bin" "$HOME/.bashrc" 2>/dev/null; then
-        echo "Adding Poetry to PATH in ~/.bashrc for future sessions..."
+        echo "Adding Poetry to PATH in ~/.bashrc..."
         echo '' >> "$HOME/.bashrc"
         echo "# Add Poetry to PATH" >> "$HOME/.bashrc"
         echo "$POETRY_PATH_LINE" >> "$HOME/.bashrc"
     fi
-
-    export PATH="$HOME/.local/bin:$PATH"
 fi
+
+# Configure Poetry for the CURRENT session
+export PATH="$HOME/.local/bin:$PATH"
+
 
 
 # Install project dependencies
