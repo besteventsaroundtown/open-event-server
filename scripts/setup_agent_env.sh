@@ -29,8 +29,24 @@ then
     export PATH="~/.local/bin:$PATH"
 fi
 
+# Install Docker if not already installed
+if ! command -v docker &> /dev/null
+then
+    echo "Docker could not be found, installing..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    rm get-docker.sh
+    echo "Docker installed successfully. Note: You may need to log out and back in to run 'docker' commands without 'sudo'."
+fi
+
 # Install project dependencies
 poetry install --with dev --no-root
+
+# Copy .env.example to .env if it doesn't exist
+if [ ! -f .env ]; then
+    echo "Creating .env file from .env.example..."
+    cp .env.example .env
+fi
 
 # Stop and remove existing PostgreSQL container if it exists
 if [ "$(sudo docker ps -q -f name=opev-test-db)" ]; then
