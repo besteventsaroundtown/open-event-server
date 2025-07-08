@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
-
 # Install Docker if not already installed
 if ! command -v docker &> /dev/null
 then
@@ -26,6 +23,17 @@ if ! command -v pyenv &> /dev/null
 then
     echo "pyenv could not be found, installing..."
     curl https://pyenv.run | $SHELL
+
+    # Add pyenv configuration to shell startup file if not present
+    if ! grep -q 'pyenv init' "$HOME/.bashrc" 2>/dev/null; then
+        echo "Adding pyenv configuration to ~/.bashrc for future sessions..."
+        echo '' >> "$HOME/.bashrc"
+        echo '# pyenv configuration' >> "$HOME/.bashrc"
+        echo 'export PYENV_ROOT="$HOME/.pyenv"' >> "$HOME/.bashrc"
+        echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> "$HOME/.bashrc"
+        echo 'eval "$(pyenv init -)"' >> "$HOME/.bashrc"
+    fi
+
     export PYENV_ROOT="$HOME/.pyenv"
     export PATH="$PYENV_ROOT/bin:$PATH"
     eval "$(pyenv init --path)"
@@ -44,8 +52,19 @@ if ! command -v poetry &> /dev/null
 then
     echo "Poetry could not be found, installing..."
     pip install poetry
-    export PATH="~/.local/bin:$PATH"
+
+    # Add poetry to PATH in shell startup file if not present
+    POETRY_PATH_LINE='export PATH="$HOME/.local/bin:$PATH"'
+    if ! grep -q ".local/bin" "$HOME/.bashrc" 2>/dev/null; then
+        echo "Adding Poetry to PATH in ~/.bashrc for future sessions..."
+        echo '' >> "$HOME/.bashrc"
+        echo "# Add Poetry to PATH" >> "$HOME/.bashrc"
+        echo "$POETRY_PATH_LINE" >> "$HOME/.bashrc"
+    fi
+
+    export PATH="$HOME/.local/bin:$PATH"
 fi
+
 
 # Install project dependencies
 poetry install --with dev --no-root
@@ -103,8 +122,4 @@ SECRET_KEY="test_secret_key"
 REDIS_URL="redis://127.0.0.1:6379/0"
 EOT
 
-# Run unit tests
-# echo "Running unit tests..."
-# poetry run pytest tests/
-
-echo "Setup and tests completed successfully!"
+echo "Environment setup complete. You can now run tests in this terminal or a new one"
