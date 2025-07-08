@@ -3,6 +3,24 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# Install Docker if not already installed
+if ! command -v docker &> /dev/null
+then
+    echo "Docker could not be found, installing..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    rm get-docker.sh
+
+    # Explicitly start the Docker daemon using the 'service' command
+    # for compatibility with non-systemd environments.
+    echo "Starting Docker service..."
+    sudo service docker start
+    # Wait a moment for the daemon to initialize.
+    sleep 5
+
+    echo "Docker installed successfully. Note: You may need to log out and back in to run 'docker' commands without 'sudo'."
+fi
+
 # Install pyenv if not already installed
 if ! command -v pyenv &> /dev/null
 then
@@ -27,24 +45,6 @@ then
     echo "Poetry could not be found, installing..."
     pip install poetry
     export PATH="~/.local/bin:$PATH"
-fi
-
-# Install Docker if not already installed
-if ! command -v docker &> /dev/null
-then
-    echo "Docker could not be found, installing..."
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
-    rm get-docker.sh
-
-    # Explicitly start the Docker daemon using the 'service' command
-    # for compatibility with non-systemd environments.
-    echo "Starting Docker service..."
-    sudo service docker start
-    # Wait a moment for the daemon to initialize.
-    sleep 5
-
-    echo "Docker installed successfully. Note: You may need to log out and back in to run 'docker' commands without 'sudo'."
 fi
 
 # Install project dependencies
