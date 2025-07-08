@@ -1,22 +1,6 @@
 #!/bin/bash
 
-# Install Docker if not already installed
-if ! command -v docker &> /dev/null
-then
-    echo "Docker could not be found, installing..."
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
-    rm get-docker.sh
 
-    # Start the Docker daemon directly to bypass init script issues (e.g., ulimit).
-    # The daemon is started in the background, and output is redirected.
-    echo "Starting Docker daemon..."
-    sudo dockerd > /dev/null 2>&1 &
-    # Wait a moment for the daemon to initialize.
-    sleep 5
-
-    echo "Docker installed successfully. Note: You may need to log out and back in to run 'docker' commands without 'sudo'."
-fi
 
 # Install pyenv if not already installed
 if ! command -v pyenv &> /dev/null
@@ -124,3 +108,8 @@ REDIS_URL="redis://127.0.0.1:6379/0"
 EOT
 
 echo "Environment setup complete. You can now run tests in this terminal or a new one"
+
+
+# Run unit tests
+ echo "Running unit tests..."
+ poetry run pytest tests/ -x
